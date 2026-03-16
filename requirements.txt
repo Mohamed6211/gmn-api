@@ -2,3 +2,4 @@ fastapi
 uvicorn
 pandas
 gmn-python-api
+setuptools
