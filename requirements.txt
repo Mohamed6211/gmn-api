@@ -1,0 +1,4 @@
+fastapi
+uvicorn
+pandas
+gmn-python-api
