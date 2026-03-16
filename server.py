@@ -1,24 +1,25 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from gmn_python_api import data_directory as dd
-from gmn_python_api import meteor_trajectory_reader
 
 app = FastAPI()
 
+# Allow requests from your frontend
+origins = [
+    "http://localhost:8080",  # your local frontend
+    "https://your-production-frontend.com"  # optional, for production
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=origins,  # or ["*"] to allow all origins (less secure)
+    allow_credentials=True,
+    allow_methods=["*"],     # GET, POST, PUT, DELETE, etc.
+    allow_headers=["*"],     # headers like Content-Type, Authorization
 )
 
+# Your existing routes
 @app.get("/meteors/{date}")
-def meteors(date: str):
-
-    traj = dd.get_daily_file_content_by_date(date)
-    df = meteor_trajectory_reader.read_data(traj)
-
-    return {
-        "count": len(df),
-        "meteors": df.to_dict(orient="records")
-    }
+def get_meteors(date: str):
+    # your existing code here
+    return {"date": date, "data": []}
