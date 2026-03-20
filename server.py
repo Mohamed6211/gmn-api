@@ -16,7 +16,18 @@ app.add_middleware(
 
 @app.get("/meteors/{date}")
 def meteors(date: str):
-    traj = dd.get_daily_file_content_by_date(date)
-    df = meteor_trajectory_reader.read_data(traj)
+    try:
+        traj = dd.get_daily_file_content_by_date(date)
 
-    return df.to_dict(orient="records")
+        if not traj:
+            return {"error": "No data found for this date"}
+
+        df = meteor_trajectory_reader.read_data(traj)
+
+        return {
+            "count": len(df),
+            "meteors": df.to_dict(orient="records")
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
