@@ -43,25 +43,38 @@ def meteors(
         meteors = []
         count = 0
 
-        for line in response.iter_lines(decode_unicode=True):
-            if not line or line.startswith("#"):
-                continue
+        for line in file_res.iter_lines(decode_unicode=True):
+    if not line or line.startswith("#"):
+        continue
 
-            parts = [p.strip() for p in line.split(";")]
+    parts = [p.strip() for p in line.split(";")]
 
-            try:
-                meteors.append({
-                    "id": parts[0],
-                    "datetime": parts[2],
-                    "vgeo": float(parts[15]) if parts[15] else None,
-                })
-                count += 1
+    if len(parts) < 70:
+        continue
 
-                if count >= limit:  # 👈 STOP EARLY
-                    break
+    try:
+        meteors.append({
+            "id": parts[0],
+            "datetime": parts[2],
 
-            except:
-                continue
+            "vgeo": float(parts[15]) if parts[15] else None,
+            "elevation": float(parts[53]) if parts[53] else None,
+
+            "lat_begin": float(parts[55]) if parts[55] else None,
+            "lon_begin": float(parts[57]) if parts[57] else None,
+
+            "lat_end": float(parts[61]) if parts[61] else None,
+            "lon_end": float(parts[63]) if parts[63] else None,
+
+            "duration": float(parts[67]) if parts[67] else None,
+        })
+
+        count += 1
+        if count >= limit:
+            break
+
+    except:
+        continue
 
         return {
             "count": count,
