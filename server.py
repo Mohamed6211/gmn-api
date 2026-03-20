@@ -19,23 +19,32 @@ app.add_middleware(
 @app.get("/meteors/{date}")
 def meteors(date: str):
     try:
-        # Validate date format (important!)
         if "-" in date:
             return {"error": "Use format YYYYMMDD (no dashes)"}
 
+        # STEP 1: get raw data
         traj = dd.get_daily_file_content_by_date(date)
 
-        if traj is None or traj == "":
+        if not traj:
             return {
-                "date": date,
-                "count": 0,
-                "meteors": [],
-                "message": "No data found"
+                "step": "get_daily_file_content_by_date",
+                "error": "No data returned",
+                "date": date
             }
 
+        # DEBUG: check type
+        print("TRAJ TYPE:", type(traj))
+
+        # STEP 2: parse data
         df = meteor_trajectory_reader.read_data(traj)
 
-        if df is None or df.empty:
+        if df is None:
+            return {
+                "step": "read_data",
+                "error": "df is None"
+            }
+
+        if df.empty:
             return {
                 "date": date,
                 "count": 0,
@@ -50,5 +59,6 @@ def meteors(date: str):
 
     except Exception as e:
         return {
+            "step": "exception",
             "error": str(e)
         }
