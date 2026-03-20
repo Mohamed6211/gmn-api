@@ -18,57 +18,54 @@ BASE_URL = "https://globalmeteornetwork.org/data/traj_summary_data"
 
 @app.get("/meteors")
 def meteors(
-    type: str = Query("latest", description="latest, yesterday, yearly"),
-    date: str = Query(None, description="YYYY for yearly data")
+    type: str = "latest",
+    date: str = None,
+    limit: int = 100  # 👈 important
 ):
-    """
-    Fetch meteors data from GMN summary files.
-
-    type: "latest", "yesterday", "yearly"
-    date: required for yearly, e.g., 2024
-    """
     try:
-        # Determine file URL
         if type == "latest":
             url = f"{BASE_URL}/daily/traj_summary_latest_daily.txt"
+
         elif type == "yesterday":
             url = f"{BASE_URL}/daily/traj_summary_yesterday.txt"
+
         elif type == "yearly" and date:
             url = f"{BASE_URL}/traj_summary_yearly_{date}.txt"
+
         else:
-            return {"error": "Invalid parameters. Use type=latest|yesterday|yearly with optional date for yearly."}
+            return {"error": "Invalid parameters"}
 
-        # Fetch file
-        response = requests.get(url, timeout=15)
+        response = requests.get(url, stream=True)
+
         if response.status_code != 200:
-            return {"error": "File not found", "url": url, "status_code": response.status_code}
-
-        lines = response.text.splitlines()
-        # Skip comment lines starting with #
-        data_lines = [l for l in lines if not l.startswith("#") and l.strip()]
+            return {"error": "File not found"}
 
         meteors = []
+        count = 0
 
-        for line in data_lines:
+        for line in response.iter_lines(decode_unicode=True):
+            if not line or line.startswith("#"):
+                continue
+
             parts = [p.strip() for p in line.split(";")]
 
-            # Only take key columns, you can expand as needed
             try:
                 meteors.append({
                     "id": parts[0],
                     "datetime": parts[2],
                     "vgeo": float(parts[15]) if parts[15] else None,
-                    "lat_begin": float(parts[55]) if parts[55] else None,
-                    "lon_begin": float(parts[57]) if parts[57] else None,
-                    "ht_begin": float(parts[59]) if parts[59] else None,
                 })
-            except IndexError:
-                continue  # skip malformed lines
+                count += 1
 
-        # Limit results for performance
+                if count >= limit:  # 👈 STOP EARLY
+                    break
+
+            except:
+                continue
+
         return {
-            "count": len(meteors),
-            "meteors": meteors[:1000]  # adjust or remove limit if safe
+            "count": count,
+            "meteors": meteors
         }
 
     except Exception as e:
