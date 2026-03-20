@@ -15,37 +15,8 @@ app.add_middleware(
 )
 
 @app.get("/meteors/{date}")
-def get_meteors(date: str):
+def meteors(date: str):
+    traj = dd.get_daily_file_content_by_date(date)
+    df = meteor_trajectory_reader.read_data(traj)
 
-    try:
-        # Download GMN trajectory file for the date
-        traj_file_content = dd.get_daily_file_content_by_date(date)
-
-        # Convert to pandas dataframe
-        traj_df = meteor_trajectory_reader.read_data(traj_file_content)
-
-        meteors = []
-
-        for _, row in traj_df.iterrows():
-
-            meteors.append({
-                "time": str(row["UTC Time"]),
-                "v_geo_km_s": float(row["Vgeo (km/s)"]),
-                "ra": float(row["RAgeo (deg)"]),
-                "dec": float(row["DECgeo (deg)"]),
-                "iau_code": str(row["IAU (code)"]),
-                "stations": str(row["stations"])
-            })
-
-        return {
-            "date": date,
-            "count": len(meteors),
-            "meteors": meteors
-        }
-
-    except Exception as e:
-        return {
-            "date": date,
-            "error": str(e),
-            "meteors": []
-        }
+    return df.to_dict(orient="records")
