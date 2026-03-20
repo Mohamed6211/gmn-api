@@ -46,3 +46,7 @@ def meteors(date: str):
         return {
             "error": str(e)
         }
+@app.get("/test")
+def test():
+    from gmn_python_api import data_directory as dd
+    return {"status": "import works"}
