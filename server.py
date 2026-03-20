@@ -70,3 +70,69 @@ def meteors(
 
     except Exception as e:
         return {"error": str(e)}
+
+BASE_URL2 = "https://globalmeteornetwork.org/data/traj_summary_data/daily"
+@app.get("/meteors-by-date/{date}")
+def meteors_by_date(date: str, limit: int = 100):
+    """
+    date format: YYYYMMDD
+    """
+    try:
+        # 1. Get directory listing HTML
+        res = requests.get(BASE_URL2)
+        if res.status_code != 200:
+            return {"error": "Failed to access daily directory"}
+
+        html = res.text
+
+        # 2. Find matching filename using regex
+        pattern = rf"traj_summary_{date}_solrange_[^\"']+\.txt"
+        match = re.search(pattern, html)
+
+        if not match:
+            return {"error": f"No file found for date {date}"}
+
+        filename = match.group(0)
+
+        # 3. Build full file URL
+        file_url = f"{BASE_URL2}/{filename}"
+
+        # 4. Fetch the file
+        file_res = requests.get(file_url, stream=True)
+        if file_res.status_code != 200:
+            return {"error": "Failed to fetch file"}
+
+        meteors = []
+        count = 0
+
+        for line in file_res.iter_lines(decode_unicode=True):
+            if not line or line.startswith("#"):
+                continue
+
+            parts = [p.strip() for p in line.split(";")]
+
+            try:
+                meteors.append({
+                    "id": parts[0],
+                    "datetime": parts[2],
+                    "vgeo": float(parts[15]) if parts[15] else None,
+                    "lat_begin": float(parts[55]) if parts[55] else None,
+                    "lon_begin": float(parts[57]) if parts[57] else None,
+                })
+
+                count += 1
+                if count >= limit:
+                    break
+
+            except:
+                continue
+
+        return {
+            "date": date,
+            "file": filename,
+            "count": count,
+            "meteors": meteors
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
