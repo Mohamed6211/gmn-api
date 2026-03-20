@@ -30,9 +30,9 @@ def meteors(
     try:
         # Determine file URL
         if type == "latest":
-            url = f"{BASE_URL}/traj_summary_latest_daily.txt"
+            url = f"{BASE_URL}/daily/traj_summary_latest_daily.txt"
         elif type == "yesterday":
-            url = f"{BASE_URL}/traj_summary_yesterday.txt"
+            url = f"{BASE_URL}/daily/traj_summary_yesterday.txt"
         elif type == "yearly" and date:
             url = f"{BASE_URL}/traj_summary_yearly_{date}.txt"
         else:
