@@ -57,8 +57,9 @@ def meteors(type: str = "latest", date: str = None, limit: int = 100):
                     "id": parts[0],
                     "datetime": parts[2],
                     "vgeo": float(parts[15]) if parts[15] else None,
-                    "elevation": float(parts[53]) if parts[53] else None,
-
+                    "elevation_degree": float(parts[53]) if parts[53] else None,
+                    "height_begin_km": float(parts[59]) if parts[59] else None,
+                    "height_end_km": float(parts[65]) if parts[65] else None,
                     "lat_begin": float(parts[55]) if parts[55] else None,
                     "lon_begin": float(parts[57]) if parts[57] else None,
 
